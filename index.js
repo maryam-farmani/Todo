@@ -4,11 +4,12 @@ const submitTodoButton = document.getElementById("submit");
 const mainList = document.getElementById("main");
 import {toastify} from "./components/toastify.js";
 
-
-const savedLcTodos = localStorage.getItem("todosList");
-const parseSavedLcTodos = JSON.parse(savedLcTodos) || [];
-console.log(parseSavedLcTodos);
-let saveTodos = [...parseSavedLcTodos];
+function getLocatedTodos(){
+    const savedLcTodos = localStorage.getItem("todosList");
+    return JSON.parse(savedLcTodos)?.sort((a,b)=> a.id - b.id) || [];
+};
+ 
+let saveTodos = [...getLocatedTodos()];
 
 
 const createNewTodo = (title,desc,id,checked) =>{
@@ -36,12 +37,17 @@ const createNewTodo = (title,desc,id,checked) =>{
 
     const todoDel = document.createElement("button");
     todoDel.innerText = "Delete";
+     
+    
 
     const todoEdit = document.createElement("button");
     todoEdit.innerText = "Edit";
+     
 
     const todoUp = document.createElement("button");
     todoUp.innerText = "CHECK";
+     
+    
 
     todoDel.className = "btnclass";
     todoEdit.className = "btnclass";
@@ -57,8 +63,10 @@ const createNewTodo = (title,desc,id,checked) =>{
     mainList.appendChild(listItem);
 };
 
-
-saveTodos.forEach((todo)=>createNewTodo(todo.title,todo.desc,todo.id,todo.checked));
+function renderTodoElement(){
+    getLocatedTodos().forEach((todo)=>createNewTodo(todo.title,todo.desc,todo.id,todo.checked));
+}
+renderTodoElement();
 
 const handleCreateNewTodo = (event) => {
     event.preventDefault();
@@ -74,9 +82,10 @@ const handleCreateNewTodo = (event) => {
         checked : false,
     };
     
+    saveTodos =[...getLocatedTodos()];
     saveTodos.push(newTodo);
     localStorage.setItem("todosList" , JSON.stringify(saveTodos));
-    console.log(saveTodos);
+    
 
     createNewTodo(newTodo.title,newTodo.desc,newTodo.id,newTodo.checked);
      
@@ -89,24 +98,26 @@ mainList.addEventListener("click", (e)=> {
     if (e.target.innerText ==="Delete") {
         const todoEl = e.target.parentElement;
         console.log(todoEl.id);
-        const filtredTodos = saveTodos.filter(
+        const filtredTodos = getLocatedTodos().filter(
             (item)=> item.id !==Number(todoEl.id)
         );
         localStorage.setItem("todosList",JSON.stringify(filtredTodos));
-        location.reload();
+        mainList.innerHTML="";
+        renderTodoElement();
     }else if(e.target.innerText==="CHECK"){
         const todoEl = e.target.parentElement;
         console.log(todoEl.id);
-        const filtredTodo = saveTodos.filter(
+        const filtredTodo = getLocatedTodos().filter(
             (item)=> item.id === Number(todoEl.id)
         );
         const updateFiltredTodo = {...filtredTodo[0], checked: true };
-        const filtredTodos = saveTodos.filter(
+        const filtredTodos = getLocatedTodos().filter(
             (item)=> item.id !==Number(todoEl.id)
         );
         const updateSavedTodos =[...filtredTodos,updateFiltredTodo];
         localStorage.setItem("todosList", JSON.stringify(updateSavedTodos));
-        location.reload();
+        mainList.innerHTML="";
+        renderTodoElement();
     }else if (e.target.innerText==="Edit"){
         const todoEl = e.target.parentElement;
         todoEl.children[0].children[0].disabled = false ;
@@ -114,16 +125,17 @@ mainList.addEventListener("click", (e)=> {
         todoEl.children[0].children[0].style.backgroundColor = "#d3a783";
         e.target.innerText="Save";
         e.target.addEventListener("click", ()=>{
-            const filtredTodo = saveTodos.filter(
+            const filtredTodo = getLocatedTodos().filter(
                 (item)=> item.id === Number(todoEl.id)
             );
             const updateFiltredTodo = {...filtredTodo[0],title: todoEl.children[0].children[0].value};
-            const filtredTodos = saveTodos.filter(
+            const filtredTodos = getLocatedTodos().filter(
                 (item)=> item.id !==Number(todoEl.id)
             );
             const updateSavedTodos =[...filtredTodos,updateFiltredTodo];
             localStorage.setItem("todosList", JSON.stringify(updateSavedTodos));
-            location.reload();
+            mainList.innerHTML="";
+            renderTodoElement();
         })
 
     }
